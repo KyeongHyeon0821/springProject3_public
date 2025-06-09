@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.ReviewDao">
+
+	<!-- 내가 '이용완료'한 객실리스트 불러오기 -->
+	<select id="getRoomIdxCheck" resultType="com.spring.springProject3.vo.ReservationListVo">
+		select r.name as roomName, r.idx as roomIdx,
+				 	 h.idx as hotelIdx
+				   from reservation rs
+				   join room r on rs.roomIdx = r.idx
+				   join hotel h on r.hotelIdx = h.idx
+				   where rs.mid = #{mid} and rs.status ='이용완료' r.idx = #{roomIdx}; 
+	</select>
+	
+	<!-- 해당 객실 리뷰리스트 조회 -->
+	<select id="getRoomReviewList" resultType="com.spring.springProject3.vo.ReviewVo">
+		select * from review where roomIdx = #{roomIdx} order by idx desc;
+	</select>
+	
+	<!-- HotelController -->
+	<select id="getReviewTotCount" resultType="int">
+		select count(idx) from review where hotelIdx = #{hotelIdx};
+	</select>
+	
+	<!-- 모든 리뷰목록 가져오기. AdminController,ReviewController -->
+	<select id="getRoomReviewAllList" resultType="com.spring.springProject3.vo.ReviewVo">
+		select * from review order by idx desc;
+	</select>
+	
+	
+	<!-- AdminController에서 리뷰작성된 룸 목록 불러오기 -->
+	<select id="getRoomUsedAllList" resultType="com.spring.springProject3.vo.ReservationListVo">
+     select r.name as roomName, r.roomNumber, r.price, r.maxPeople, r.petSizeLimit, r.petCountLimit, r.thumbnail as roomThumbnail, r.idx as roomIdx,
+	     h.name as hotelName, h.thumbnail as hotelThumbnail, h.idx as hotelIdx,
+	     rs.idx as reservationIdx, reservationNo,
+	     rs.checkinDate,
+	     rs.checkoutDate,
+	     rs.guestCount,
+	     rs.petCount,
+	     rs.totalPrice  
+	   from reservation rs
+	     join room r on rs.roomIdx = r.idx
+	     join hotel h on r.hotelIdx = h.idx
+     where rs.status ='리뷰작성' group by r.idx order by rs.checkinDate desc limit #{startIndexNo},#{pageSize};
+  </select>
+	
+	<!-- 리뷰를 달았는지 확인한다 -->
+	<select id="getExistReviewedCheck" resultType="int">
+		select idx from reservation where mid = #{mid} and status = '리뷰작성';
+	</select>
+	
+	
+	<!-- 해당 호텔 리뷰 리스트 조회 -->
+	<select id="getHotelReviewList" resultType="com.spring.springProject3.vo.ReviewVo">
+		select * from review where hotelIdx = #{idx} order by idx desc;
+	</select>
+	
+	<!-- 최신 등록 리뷰 메인에 출력 -->
+	<select id="getLatestReviews" resultType="com.spring.springProject3.vo.ReviewVo">
+	  SELECT r.*, h.name AS hotelName 
+	  FROM review r 
+	  JOIN hotel h ON r.hotelIdx = h.idx 
+	  WHERE h.status = '정상'
+	  ORDER BY r.reviewDate DESC 
+	  LIMIT 3
+	</select>
+	
+	<!-- 평점순 호텔 메인에 출력 -->
+  <select id="getTopRatedHotels" resultType="com.spring.springProject3.vo.HotelVo">
+	  SELECT h.*, 
+	         ROUND(AVG(r.star), 1) AS averageStar, 
+	         (SELECT MIN(price) FROM room WHERE hotelIdx = h.idx) AS minPrice
+	  FROM review r 
+	  JOIN hotel h ON r.hotelIdx = h.idx 
+	  WHERE h.status = '정상'
+	  GROUP BY h.idx 
+	  ORDER BY averageStar DESC 
+	  LIMIT 3
+	</select>
+  
+  <!-- 리뷰를 등록 처리 -->
+	<insert id="setReviewInputOk">
+		insert into review values (default, #{vo.hotelIdx}, #{vo.roomIdx}, #{vo.reservationIdx}, #{vo.reservationNo}, #{vo.mid},#{vo.nickName}, #{vo.roomName},#{vo.purpose},#{vo.star},#{vo.content},#{vo.hostIp}, default);
+	</insert>
+	
+	<!-- 리뷰 수정 처리 -->
+	<update id="setReviewUpdateCheckOk">
+		update review set content = #{vo.content} where idx = #{vo.idx};
+	</update>
+	
+	<!-- 리뷰를 삭제하면 예약상태를 '리뷰작성'에서 >'이용완료'로 수정한다 -->
+	<update id="setReviewStatusBack">
+		update reservation set status = '이용완료' where reservationNo = #{vo.reservationNo};
+	</update>
+	
+	
+	<!-- 리뷰 삭제처리 -->
+	<delete id="setReviewDelete">
+		delete from review where idx = #{vo.idx};
+	</delete>
+
+
+
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.PetDao">
+
+  <!-- 특정 회원의 강아지 리스트 -->
+  <select id="getPetList" parameterType="String" resultType="com.spring.springProject3.vo.PetVo">
+    select * from pet where memberMid = #{memberMid}
+  </select>
+
+  <!-- 마릿수 제한용 count -->
+  <select id="getPetCountByMember" parameterType="String" resultType="int">
+    select count(*) from pet where memberMid = #{memberMid}
+  </select>
+  
+  <!-- 강아지 개별 조회 -->
+  <select id="getPetById" parameterType="int" resultType="com.spring.springProject3.vo.PetVo">
+    select * from pet where petIdx = #{petIdx}
+  </select>
+
+
+
+ <!-- 강아지 등록 -->
+  <insert id="insertPet" parameterType="com.spring.springProject3.vo.PetVo">
+    insert into pet values (default, #{vo.memberMid}, #{vo.petName}, #{vo.breed}, #{vo.petGender}, #{vo.petAge}, #{vo.weight}, #{vo.photo}, #{vo.memo})
+  </insert>
+
+
+
+  <!-- 강아지 정보 수정 -->
+  <update id="updatePet" parameterType="com.spring.springProject3.vo.PetVo">
+    update pet set petName = #{vo.petName}, breed = #{vo.breed}, petGender = #{vo.petGender}, petAge = #{vo.petAge}, weight = #{vo.weight}, photo = #{vo.photo}, memo = #{vo.memo} where petIdx = #{vo.petIdx}
+  </update>
+
+  <!-- 강아지 정보 삭제 -->
+  <delete id="deletePet" parameterType="com.spring.springProject3.vo.PetVo">
+	delete from pet where petIdx = #{vo.petIdx}
+  </delete>
+
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.CouponDao">
+	
+	<select id="getTotRecCnt" resultType="int">
+	  <if test='couponType == "전체"'>
+	  	<if test='couponActive == 9'>
+	  	  select ifnull(count(*), 0) from coupon;
+	  	</if>
+	  	<if test='couponActive != 9'>
+	  	  select ifnull(count(*), 0) from coupon where isActive = #{couponActive};
+	  	</if>
+	  </if>
+	  <if test='couponType != "전체"'>
+	  	<if test='couponActive == 9'>
+	  	  select ifnull(count(*), 0) from coupon where couponType = #{couponType};
+	  	</if>
+	  	<if test='couponActive != 9'>
+	  	  select ifnull(count(*), 0) from coupon where couponType = #{couponType} and isActive = #{couponActive};
+	  	</if>
+	  </if> 
+	</select>
+
+	<select id="getCouponList" resultType="com.spring.springProject3.vo.CouponVo">
+		<if test='couponType == "전체"'>
+	  	<if test='couponActive == 9'>
+	  		select * from coupon order by idx desc limit #{startIndexNo},#{pageSize};
+	  	</if>
+	  	<if test='couponActive != 9'>
+	  		select * from coupon where isActive = #{couponActive} order by idx desc limit #{startIndexNo},#{pageSize};
+	  	</if>
+	  </if>
+	  <if test='couponType != "전체"'>
+	  	<if test='couponActive == 9'>
+	  		select * from coupon where couponType = #{couponType} order by idx desc limit #{startIndexNo},#{pageSize};
+	  	</if>
+	  	<if test='couponActive != 9'>
+	  		select * from coupon where couponType = #{couponType} and isActive = #{couponActive} order by idx desc limit #{startIndexNo},#{pageSize};
+	  	</if>
+	  </if>
+	</select>
+	
+	<select id="getCouponContent" resultType="com.spring.springProject3.vo.CouponVo">
+	  select * from coupon where idx = #{idx};
+	</select>
+	
+	<select id="getUseCouponList" resultType="com.spring.springProject3.vo.CouponVo">
+	  select * from coupon where isActive = 1 order by expiryDate;
+	</select>
+	
+	<select id="getCouponCodeList" resultType="com.spring.springProject3.vo.CouponVo">
+	  select u.*, (select expiryDate from coupon where couponCode=u.userCouponCode) as expiryDate, (select photo from coupon where couponCode=u.userCouponCode) as photo 
+	    from coupon c, couponUser u where u.userCouponCode = c.couponCode and u.userCouponCode = #{couponCode} order by expiryDate;
+	</select>
+	
+	<select id="getCouponMidList" resultType="com.spring.springProject3.vo.CouponVo">
+	  select u.*, (select expiryDate from coupon where couponCode=u.userCouponCode) as expiryDate, (select idx from coupon where couponCode=u.userCouponCode) as idx 
+	    from coupon c, couponUser u where u.userCouponCode = c.couponCode and mid = #{mid} order by expiryDate;
+	</select>
+	
+	<!-- 쿠폰 중복 발급 체크 -->
+	<select id="getCouponIssuedCheck" resultType="int">
+		select count(*) from couponuser where usercouponCode = #{couponCode} and mid = #{mid};		
+	</select>
+	
+	<!-- 사용 가능 쿠폰 (예약 시) -->
+	<select id="getAvailableMyCoupons" resultType="com.spring.springProject3.vo.CouponVo">
+		select couponuser.*, coupon.discountType as discountType, coupon.discountValue as discountValue, coupon.couponname as couponName
+		from couponuser, coupon
+		where couponuser.usercouponcode = coupon.couponcode and couponuser.mid = #{mid} and couponuser.isUse = '미사용';
+	</select>
+	
+	
+	<insert id="setCouponInput">
+	  insert into coupon values (default,#{vo.couponType},#{vo.couponCode},#{vo.couponName},#{vo.discountType},#{vo.discountValue},#{vo.issueDate},#{vo.expiryDate},#{vo.isActive},#{vo.photo});
+	</insert>
+	
+	<insert id="setCouponUserInformation">
+	  insert into couponUser values (default, #{vo.userCouponCode}, #{vo.mid}, #{vo.email}, default, default, default, #{vo.couponQrcode});
+	</insert>
+	
+	
+	
+	<update id="setCouponUpdate">
+	  update coupon set couponType=#{vo.couponType}, couponName=#{vo.couponName}, discountType=#{vo.discountType}, discountValue=#{vo.discountValue}, issueDate=#{vo.issueDate}, expiryDate=#{vo.expiryDate}, isActive=#{vo.isActive}, photo=#{vo.photo} where idx=#{vo.idx};
+	</update>
+	
+	<update id="setUserCouponCodeUsed">
+	  update couponUser set isUse='사용완료', usedDate = now() where userCouponCode = #{userCouponCode};
+	</update>
+	
+	<!-- 예약시 사용된 쿠폰 사용완료처리 -->
+	<update id="setMyCouponUse">
+		update couponUser set isUse='사용완료', usedDate = now() where mid = #{mid} and userCouponCode = #{couponCode};
+	</update>
+	
+	
+	<delete id="setCouponDeleteCheck">
+	  delete from coupon where idx = #{idx};
+	</delete>
+	
+	
+</mapper>

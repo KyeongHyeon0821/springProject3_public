@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.InquiryDao">
+
+  <select id="getInquiryTotRecCnt" resultType="int">
+  	select count(*) from inquiry where mid=#{mid};
+  </select>
+
+  <select id="getInquiryList" resultType="com.spring.springProject3.vo.InquiryVo">
+  	select * from inquiry where mid=#{mid} order by idx desc limit #{startIndexNo},#{pageSize};
+  </select>
+  
+  <select id="getInquiryDetail" resultType="com.spring.springProject3.vo.InquiryVo">
+  	<!-- select * from inquiry where idx = #{idx}; -->
+  	select *,(select reContent from inquiryReply where inquiryIdx=a.idx) as reContent from inquiry a where idx = #{idx};
+  </select>
+  
+  <select id="getInquiryReply" resultType="com.spring.springProject3.vo.InquiryReplyVo">
+  	select * from inquiryReply where inquiryIdx = #{idx} 
+	</select>
+  
+
+  <insert id="setInquiryInputOk">
+		insert into inquiry values (default,#{vo.mid},#{vo.title},#{vo.part},default,#{vo.reservation},#{vo.content},#{vo.fSName},default);
+  </insert>
+  
+  <update id="setInquiryUpdate">
+  	update inquiry set title=#{vo.title},reservation=#{vo.reservation},content=#{vo.content},fSName=#{vo.fSName} where idx=#{vo.idx};
+  </update>
+  
+  <update id="setInquiryImageDelete">
+  	update inquiry set fSName='' where idx=#{idx};
+  </update>
+  
+<!--   <update id="getInquiryReply">
+  	update
+  </update> -->
+  
+  
+  
+  <delete id="setInquiryDelete">
+  	delete from inquiry where idx = #{idx};
+  </delete>
+</mapper>

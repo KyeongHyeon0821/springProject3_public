@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.FaqDao">
+  
+	<select id="getFaqTotRecCntSearch">
+	  <if test='category =="전체"'>
+			select count(*) from faq <if test='searchString !=""'> where title like concat('%',#{searchString},'%') </if>;
+		</if>
+	  <if test='category !="전체"'>
+			select count(*) from faq where category=#{category} <if test='searchString !=""'> and title like concat('%',#{searchString},'%') </if>;
+		</if>
+	</select>
+
+  <select id="getFaqList" resultType="com.spring.springProject3.vo.FaqVo">
+  	<if test='category =="전체"'>
+			select * from faq <if test='searchString !=""'> where title like concat('%',#{searchString},'%') </if> order by idx desc limit #{startIndexNo},#{pageSize};
+		</if>
+	  <if test='category !="전체"'>
+			select * from faq where category=#{category} <if test='searchString !=""'> and title like concat('%',#{searchString},'%') </if> order by idx desc limit #{startIndexNo},#{pageSize};
+		</if>
+  </select>
+
+	<select id="getFaqDetail" resultType="com.spring.springProject3.vo.FaqVo">
+		select * from faq where idx = #{idx};
+	</select>
+	
+	<select id="getPreNextSearch" resultType="com.spring.springProject3.vo.FaqVo">
+		select idx,title from faq where
+			<if test='preNext == "pre"'><![CDATA[idx < #{idx}]]></if>
+			<if test='preNext != "pre"'><![CDATA[idx > #{idx}]]></if>
+			order by idx <if test='preNext == "pre"'> desc </if> limit 1;
+	</select>
+	
+
+
+
+
+
+
+	<insert id="setAdFaqInputOk">
+		insert into faq values (default,#{vo.category},#{vo.title},#{vo.content},default)
+	</insert>
+	
+	
+	
+	
+	
+	
+	
+	<update id="setFaqReadNumPlus">
+		update faq set readNum = readNum + 1 where idx =#{idx};
+	</update>
+	
+	<update id="setFaqUpdate">
+		update faq set category=#{vo.category},title=#{vo.title},content=#{vo.content} where idx=#{vo.idx};
+	</update>
+	
+	
+	
+	
+	
+	<delete id="setFaqDelete">
+		delete from faq where idx = #{idx};
+	</delete>
+	
+	<delete id="adFaqDetailDelete">
+		delete from faq where idx = #{idx};
+	</delete>
+	
+	
+</mapper>

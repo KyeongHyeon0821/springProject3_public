@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.HotelDao">
+  
+	<!-- 호텔리스트 조회 -->
+	<select id="getHotelList" resultType="com.spring.springProject3.vo.HotelVo">
+	  select h.idx, h.name, h.thumbnail, h.address, h.tel, roomPrice.minPrice, 
+	  	ifnull(reviewStats.averageStar, 0.0) as averageStar, ifnull(reviewStats.reviewCnt, 0) as reviewCnt
+  	from hotel h
+		  left join (
+		    select hotelIdx, min(price) as minPrice
+		    from room
+		    group by hotelIdx
+		  ) roomPrice on h.idx = roomPrice.hotelIdx
+		  left join (
+		    select hotelIdx, round(avg(star), 1) as averageStar, count(*) as reviewCnt
+		    from review
+		    group by hotelIdx
+		  ) reviewStats on h.idx = reviewStats.hotelIdx
+	  where h.status = '정상'
+	  order by h.idx desc
+	  limit #{startIndexNo}, #{pageSize}
+	</select>
+	  	
+	<!-- 조건 검색 호텔리스트 조회 -->
+	<select id="getSearchHotelList" resultType="com.spring.springProject3.vo.HotelVo">
+	  select h.idx, h.name, h.thumbnail, h.address, h.tel,
+	    (
+	      select min(r2.price)
+	      from room r2
+	      where r2.hotelIdx = h.idx
+	        and <![CDATA[r2.maxPeople >= #{guestCount}]]>
+	        and <![CDATA[r2.petCountLimit >= #{petCount}]]>
+	        and r2.status = '정상'
+	        and not exists (
+	          select 1
+	          from reservation res
+	          where res.roomIdx = r2.idx
+	            and res.status in ('결제대기', '결제완료')
+	            and (<![CDATA[res.checkInDate < #{checkoutDate}]]> and <![CDATA[res.checkOutDate > #{checkinDate}]]>)
+	        )
+	    ) as minPrice,
+	    (
+	      select ifnull(round(avg(rv.star), 1), 0.0)
+	      from review rv
+	      where rv.hotelIdx = h.idx
+	    ) as averageStar,
+	    (
+	      select count(rv.idx)
+	      from review rv
+	      where rv.hotelIdx = h.idx
+	    ) as reviewCnt
+	  from hotel h
+	  where (h.name like concat('%', #{searchString}, '%') or h.address like concat('%', #{searchString}, '%'))
+	    and h.status = '정상'
+	    and exists (
+	      select 1
+	      from room r2
+	      where r2.hotelIdx = h.idx
+	        and <![CDATA[r2.maxPeople >= #{guestCount}]]>
+	        and <![CDATA[r2.petCountLimit >= #{petCount}]]>
+	        and r2.status = '정상'
+	        and not exists (
+	          select 1
+	          from reservation res
+	          where res.roomIdx = r2.idx
+	            and res.status in ('결제대기', '결제완료')
+	            and (<![CDATA[res.checkInDate < #{checkoutDate}]]> and <![CDATA[res.checkOutDate > #{checkinDate}]]>)
+	        )
+	    )
+	  order by h.idx desc
+	  limit #{startIndexNo}, #{pageSize}
+	</select>
+  
+  <!-- 찜한 호텔 리스트 idx 조회 -->
+  <select id="getLikedHotelListIdx" resultType="Integer">
+	  select hotelIdx from hotelLike where mid = #{mid};
+  </select>
+  
+  <!-- 호텔 조회 (idx)-->
+  <select id="getHotel" resultType="com.spring.springProject3.vo.HotelVo">
+  	select * from hotel where idx = #{idx};
+  </select>
+  
+  <!-- 호텔 관광지 조회 (idx)-->
+  <select id="getHotelSearch" resultType="com.spring.springProject3.vo.HotelVo">
+  	select h.*, t.idx as spotIdx, t.hotelIdx as spotHotelIdx, t.name as spotName, t.lat as spotLat, t.lng as spotLng, t.address as spotAddress, t.description as spotDescription from hotel h, tourist_spot t where h.status = '정상' and h.idx = #{idx} order by h.idx desc;
+  </select>
+  
+  <!-- 호텔 찜 조회 -->
+  <select id="getHotelLike" resultType="int">
+  	select count(*) from hotelLike where hotelIdx=#{idx} and mid=#{mid};
+  </select>
+  
+  <!-- 등록된 호텔 목록 조회 -->
+  <select id="getHotelListByMid" resultType="com.spring.springProject3.vo.HotelVo">
+    select 
+      h.idx, h.name, h.thumbnail, h.address, h.tel,
+      ifnull((select min(price) from room where hotelIdx = h.idx), 0) as minPrice,
+      ifnull(round(avg(rv.star), 1), 0.0) as averageStar,
+      count(rv.idx) as reviewCnt
+    from hotel h
+    left join review rv on h.idx = rv.hotelIdx
+    where h.mid = #{mid}
+    group by h.idx
+    order by h.idx desc
+  </select>
+  
+	<!-- 최신 등록 호텔 리스트(메인) -->
+  <select id="getRecentHotels" resultType="HotelVo">
+	  SELECT h.*, 
+	         (SELECT MIN(price) FROM room WHERE hotelIdx = h.idx) AS minPrice 
+	  FROM hotel h 
+	  WHERE h.status = '정상'
+	  ORDER BY h.regDate DESC 
+	  LIMIT #{limit}
+	</select>
+  
+  <!-- 호텔 등록 -->
+  <insert id="setHotelInput">
+  	insert into hotel values (default, #{vo.mid}, #{vo.name}, #{vo.address}, #{vo.tel}, #{vo.description}, #{vo.thumbnail}, #{vo.images}, default, default, #{vo.x}, #{vo.y});
+  </insert>
+  
+  <!-- 호텔 찜 등록 -->
+  <insert id="setHotelLikeOk">
+  	insert into hotelLIke values(default,#{mid},#{hotelIdx},default);
+  </insert>
+  
+  <!-- 호텔 상태 업데이트 -->
+  <update id="setHotelStatusUpdate">
+  	update hotel set status = #{status} where idx = #{idx};
+  </update>
+  
+  <!-- 호텔 정보 수정 -->
+  <update id="setHotelUpdate">
+  	update hotel set name=#{vo.name},address=#{vo.address},tel=#{vo.tel},description=#{vo.description},thumbnail=#{vo.thumbnail},images=#{vo.images},x=#{vo.x},y=#{vo.y} where idx = #{vo.idx};
+  </update>
+  
+  <!-- 호텔 찜 취소 -->
+  <delete id="setHotelLikeNo">
+  	delete from hotelLIke where mid=#{mid} and hotelIdx=#{hotelIdx};
+  </delete>
+  
+</mapper>

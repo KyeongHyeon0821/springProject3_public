@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.BoardReplyDao">
+
+  <!-- 댓글 목록 -->
+  <select id="getReplies" resultType="com.spring.springProject3.vo.BoardReplyVo">
+    select idx, boardidx, mid, nickname, content, createdat from boardreply where boardidx = #{boardIdx} order by idx asc
+  </select>
+  
+  <!-- 댓글 갯수 가져오기 -->
+  <select id="getReplyCount" resultType="int">
+    select count(*) from boardreply where boardidx = #{boardIdx}
+  </select>
+  
+
+
+  <!-- 댓글 등록 -->
+  <insert id="insertReply">
+    insert into boardreply (boardidx, mid, nickname, content) values (#{boardIdx}, #{mid}, #{nickName}, #{content})
+  </insert>
+  
+  
+  
+  <!-- 댓글 수정 -->
+  <update id="updateReply">
+	update boardreply set content = #{content} where idx = #{idx}
+  </update>
+  
+  
+
+  <!-- 댓글 삭제 (작성자 본인만 삭제 가능) -->
+  <delete id="deleteReply">
+    delete from boardreply where idx = #{idx} AND mid = #{mid}
+  </delete>
+
+</mapper>

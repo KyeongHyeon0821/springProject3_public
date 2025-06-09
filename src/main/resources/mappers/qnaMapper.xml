@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.QnaDao">
+
+	<select id="getMaxIdx" resultType="int">
+		select ifnull(max(idx), 0) from qna;
+	</select>
+	
+	<select id="getQnaTotRecCnt" resultType="int">
+		select count(*) from qna;
+	</select>
+	
+	<select id="getQnaTotRecCntSearch" resultType="int">
+		select count(*) from qna Where ${search} like concat('%',#{searchString},'%');
+	</select>
+	
+	<select id="getQnaSearchList" resultType="com.spring.springProject3.vo.QnaVo">
+		select *,(select qnaAnswer from qnaAdmin where qnaIdx=q.idx) as qnaAnswer from qna q where delCheck != 'OK' and (${search} like concat('%',#{searchString},'%')) order by qnaIdx desc, qnaSw desc, ansLevel limit #{startIndexNo},#{pageSize}; 
+	</select>
+	
+	<select id="getQnaList" resultType="com.spring.springProject3.vo.QnaVo">
+		select *,(select qnaAnswer from qnaAdmin where qnaIdx=q.idx) as qnaAnswer from qna q order by qnaIdx desc, qnaSw desc, ansLevel limit #{startIndexNo},#{pageSize};
+	</select>
+	
+	<select id="getQnaDetail" resultType="com.spring.springProject3.vo.QnaVo">
+		select *,(select qnaAnswer from qnaAdmin where qnaIdx=q.idx) as qnaAnswer from qna q where idx=#{idx};
+	</select>
+	
+	<select id="getQnaContent" resultType="com.spring.springProject3.vo.QnaVo">
+		select * from qna where idx=#{idx};
+	</select>
+
+  <select id="getQnaIdxCheck" resultType="int">
+    select count(*) from qna where qnaIdx  = #{qnaIdx};
+  </select>
+  
+  <select id="getQnaTotRecCntQnaAnswer" resultType="int">
+    select count(*) from qna q where (select qnaAnswer from qnaAdmin where qnaIdx=q.idx) = #{qnaAnswer};
+  </select>
+
+	<select id="getQnaListQnaAnswer" resultType="com.spring.springProject3.vo.QnaVo">
+		select *,(select qnaAnswer from qnaAdmin where qnaIdx=q.idx) as qnaAnswer from qna q where (select qnaAnswer from qnaAdmin where qnaIdx=q.idx) = #{qnaAnswer} order by qnaIdx desc, qnaSw desc, ansLevel limit #{startIndexNo},#{pageSize};
+	</select>
+
+
+
+
+
+
+
+  <insert id="qnaInputOk">
+    insert into qna values (#{vo.idx},#{vo.qnaIdx},#{vo.mid},#{vo.nickName},#{vo.title},#{vo.email},#{vo.content},#{vo.ansLevel},#{vo.openSw},#{vo.qnaSw},default,default);
+  </insert>
+  
+  <insert id="qnaAdminInputOk">
+    insert into qnaAdmin values (default, #{qnaIdx}, default);
+  </insert>
+
+
+
+	<update id="setQnaUpdate">
+		update qna set nickName=#{vo.nickName},title=#{vo.title},email=#{vo.email},content=#{vo.content},openSw=#{vo.openSw} where idx=#{vo.idx};
+	</update>
+	
+	<update id="qnaAdminAnswerUpdateOk">
+	  update qnaAdmin set qnaAnswer = '답변완료' where qnaIdx=#{qnaIdx};
+	</update>
+	
+	<update id="setQnaAdminUpdate">
+		update qnaAdmin set qnaAnswer = '답변대기' where qnaIdx = #{qnaIdx};
+	</update>
+	
+	<update id="setQnaDelCheckUpdate">
+		update qna set delCheck = 'OK' where idx = #{idx};
+	</update>
+	
+	
+	
+
+	<delete id="setQnaDelete">
+		delete from qnaAdmin where qnaIdx = #{idx};
+		delete from qna where idx = #{idx};
+	</delete>
+	
+	<delete id="setQnaDeleteOne">
+		delete from qna where idx=#{idx};
+	</delete>
+
+
+</mapper>

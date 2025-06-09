@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.RoomDao">
+  
+  <!-- 객실 등록 처리 -->
+  <insert id="setRoomInput">
+  	insert into room values(default, #{vo.mid}, #{vo.hotelIdx}, #{vo.name}, #{vo.roomNumber}, #{vo.price}, #{vo.maxPeople}, #{vo.petSizeLimit}, #{vo.petCountLimit}, #{vo.thumbnail}, #{vo.images}, default, default);
+  </insert>
+  
+  <!-- 객실의 옵션 등록 처리 -->
+  <insert id="setRoomOptions">
+  	insert into roomOptions values(#{roomIdx}, #{optionIdx});
+  </insert>
+  
+  <!-- 전체 옵션 리스트 조회 -->
+  <select id="getOptionList" resultType="com.spring.springProject3.vo.OptionVo">
+  	select * from options;
+  </select>
+  
+  <!-- 객실 max idx 가져오기 -->
+  <select id="getMaxIdx" resultType="int">
+		select max(idx) from room;  
+  </select>
+  
+  <!-- 호텔별 객실 리스트 조회  -->
+  <select id="getRoomList" resultType="com.spring.springProject3.vo.RoomVo">
+  	select * from room where hotelIdx = #{idx};
+  </select>
+  
+  <!-- 호텔별 예약 가능한 객실 리스트 조회 -->
+  <select id="getAvailableRoomList" resultType="com.spring.springProject3.vo.RoomVo">
+  	select * from room 
+  		where hotelidx = #{idx} and <![CDATA[maxpeople >= #{guestCount}]]> and <![CDATA[petcountlimit >= #{petCount}]]> and status = '정상' 
+  			and idx not in (select roomidx from reservation where status in ('결제대기', '결제완료')  and (<![CDATA[checkinDate < #{checkoutDate}]]> and <![CDATA[checkoutDate > #{checkinDate}]]>))
+  		order by name desc;
+  </select>
+  
+  
+   <!-- 객실 1개 조회 -->
+  <select id="getRoom" resultType="com.spring.springProject3.vo.RoomVo">
+  	select * from room where idx=#{roomIdx};
+  </select>
+  
+  <!-- 객실별 옵션 리스트 조회 -->
+  <select id="getRoomOptionList" resultType="com.spring.springProject3.vo.OptionVo">
+  	select * from options where idx in (select optionIdx from roomOptions where roomIdx = ${roomIdx});
+  </select>
+  
+  
+  <!-- 멤버가 예약 후 이용완료한 객실 정보를 마이페이지에 불러온다 -->
+   <select id="getRoomUsedList" resultType="com.spring.springProject3.vo.ReservationListVo">
+     select r.name as roomName, r.roomNumber, r.price, r.maxPeople, r.petSizeLimit, r.petCountLimit, r.thumbnail as roomThumbnail, r.idx as roomIdx,
+	     h.name as hotelName, h.thumbnail as hotelThumbnail, h.idx as hotelIdx,
+	     rs.idx as reservationIdx, reservationNo,
+	     rs.checkinDate,
+	     rs.checkoutDate,
+	     rs.guestCount,
+	     rs.petCount,
+	     rs.totalPrice  
+	   from reservation rs
+	     join room r on rs.roomIdx = r.idx
+	     join hotel h on r.hotelIdx = h.idx
+     where rs.mid = #{mid} and rs.status ='이용완료' order by rs.checkinDate desc;
+   </select>
+
+  
+ 	<!-- 예약상태가 '리뷰작성' 상태인 '멤버의 이용 reservationNo'와 'roomIdx'를 가져온다 --> 
+  <select id="getReviewSave" resultType="com.spring.springProject3.vo.ReservationVo">
+  	select reservationNo, roomIdx from reservation where mid = #{mid} and status = '리뷰작성';
+  </select>
+  
+  
+  <!--지정 예약넘버에 리뷰를 작성했는지 체크한다 -->
+  <select id="getReviewSaveCheck" resultType="com.spring.springProject3.vo.ReviewVo">
+  	select * from review where reservationNo = #{reservationNo}; 
+  </select>
+  
+  
+  <!-- 객실 정보 수정 처리 -->
+  <update id="setRoomUpdate">
+  	update room set name=#{vo.name},roomNumber=#{vo.roomNumber},price=#{vo.price},maxPeople=#{vo.maxPeople},petSizeLimit=#{vo.petSizeLimit},petCountLimit=#{vo.petCountLimit} where idx=#{vo.idx};
+  </update>
+  
+  <!-- 객실 이미지 수정(이미지 파일 1개 이름 삭제) -->
+  <update id="setUpdateImages">
+  	update room set images = #{images} where idx = #{idx};
+  </update>
+  
+  <!-- 객실 이미지 삭제 -->
+  <update id="setDeleteImages">
+  	update room set images = null where idx = #{idx};
+  </update>
+  
+  <!-- 객실 썸네일, 이미지 수정 -->
+  <update id="setRoomThumbnailAndImageUpdate">
+  	update room set thumbnail = #{vo.thumbnail}, images = #{vo.images} where idx = #{vo.idx};
+  </update>
+  
+  <!-- 객실 상태 수정 -->
+  <update id="setroomStatusUpdate">
+  	update room set status = #{status} where idx = #{idx};
+  </update>
+  
+  
+  <!-- 기존 객실-옵션 데이터 삭제 -->
+  <delete id="setDeleteRoomOptions">
+  	delete from roomOptions where roomIdx=#{idx};
+  </delete>
+  
+  
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.springProject3.dao.ReservationDao">
+  
+  <!-- 예약번호로 예약정보 가져오기 -->
+  <select id="getReservation" resultType="com.spring.springProject3.vo.ReservationVo">
+  	select * from reservation where reservationNo = #{reservationNo};
+  </select>
+  
+  <!-- 내 예약 내역 조회 -->
+  <select id="getMyReservations" resultType="com.spring.springProject3.vo.ReservationVo">
+  	select * from reservation where mid = #{mid} order by idx desc;
+  </select>
+  <!-- 예악 정보 저장 처리(결제 전) -->
+  <insert id="setReservationInput">
+  	insert into reservation values(default, #{vo.reservationNo}, #{vo.mid}, #{vo.name}, #{vo.tel}, #{vo.email}, #{vo.roomIdx}, #{vo.checkinDate}, #{vo.checkoutDate}, #{vo.guestCount}, #{vo.petCount}, #{vo.totalPrice}, #{vo.status},#{vo.memo}, default);
+  </insert>
+
+	<!-- 예약 상태 업데이트 (체크아웃 날짜가 오늘과 같거나 이전이면 이용완료 처리 -->
+  <update id="setReservationUpdateToDone">
+  	update reservation set status = '이용완료' where status = '결제완료' and<![CDATA[checkoutDate <= CURRENT_DATE]]>;
+  </update>
+  
+  <!-- 결제 안 한 예약 자동 취소 ('결제대기' -> '예약취소' 예약 당일 안 했을 경우) -->
+  <update id="setReservationAutoCancel">
+  	update reservation set status = '예약취소', regDate=now() where status = '결제대기' and<![CDATA[DATE(regDate) < CURDATE()]]>;
+  </update>
+  
+  <!-- 결제 완료 처리 ('결제대기' -> '결제완료') -->
+  <update id="setReservationPaymentOk">
+  	update reservation set status = '결제완료', regDate=now() where status = '결제대기' and reservationNo = #{reservationNo};
+  </update>
+  
+  <!-- 이용완료 후 리뷰를 달면 상태수정 -->
+  <update id="setReviewCheckOk">
+  	update reservation set status = '리뷰작성' where status = '이용완료' and roomIdx = #{vo.roomIdx};
+  </update>
+  
+  <!-- 마이페이지 예약취소 처리 -->
+  <update id="setReservationCancel">
+  	update reservation set status = '예약취소' where status = '결제대기' and reservationNo = #{reservationNo} and mid = #{mid};
+  </update>
+  
+  <!-- 이용완료 후 리뷰를 달면 상태수정 -->
+  <update id="setReviewSave">
+  	update reservation set status = '리뷰작성' where status = '이용완료' and reservationNo = #{vo.reservationNo};
+  </update>
+  
+  
+</mapper>
