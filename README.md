@@ -1,3 +1,5 @@
+![위드펫 홈화면](https://github.com/user-attachments/assets/896d4182-8441-4c4d-b48a-73b7fb40fd6c)
+
 # withPET
 > Spring Legacy Project
 >
