@@ -13,6 +13,8 @@
 
 프로젝트 PDF 다운로드 : https://drive.google.com/file/d/1u23bEFND7DPR9YiHZqiuUor0xakOypVp/view?usp=drive_link
 
+시연 영상 : https://www.youtube.com/watch?v=UlrHb1M92TU
+
 ---
 
 ## 기술 스택 (Tech Stack)
