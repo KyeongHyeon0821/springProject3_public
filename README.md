@@ -15,7 +15,7 @@
 
 시연 영상 : https://www.youtube.com/watch?v=UlrHb1M92TU
 
----
+
 
 ## 기술 스택 (Tech Stack)
 
@@ -37,7 +37,7 @@
 ![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
 
----
+
 ## 수행 역할
 - [x] 호텔/객실 검색, 등록, 수정, 상세 페이지 구현
 - [x] 예약 및 결제 기능 구현
@@ -45,12 +45,11 @@
 - [x] 인터셉터, 에러처리, 스케줄러 구현
 - [x] Git 코드 병합 및 프로젝트 총괄
 
----
+
 
 ## 팀 구성 및 역할
 ![슬라이드2](https://github.com/user-attachments/assets/1b2b4bb4-6ff2-4f37-8b7f-3635e7a551eb)
 
----
 
 ## 주요 화면 구성
 ![슬라이드10](https://github.com/user-attachments/assets/84b7dc0e-2490-4e68-b278-41f795d40c41)
